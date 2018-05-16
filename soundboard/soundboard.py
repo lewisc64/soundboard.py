@@ -10,6 +10,9 @@ WIDTH = 300
 HEIGHT = 600
 FPS = 60
 
+display = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+clock = pygame.time.Clock()
+
 class Item:
     def __init__(self, x, y, width, height):
         self.x = x
@@ -290,6 +293,7 @@ class Entry:
             self.set_blinker()
 
 def search(structure):
+    global display
     
     last_string = ""
     box = Entry(10, 10, WIDTH - 20, 20)
@@ -301,6 +305,8 @@ def search(structure):
             if e.type == pygame.QUIT:
                 pygame.quit()
                 quit()
+            elif e.type == pygame.VIDEORESIZE:
+                display = pygame.display.set_mode((e.w, e.h), pygame.RESIZABLE)
             elif e.type == pygame.KEYUP:
                 if e.key == pygame.K_ESCAPE:
                     return
@@ -332,9 +338,6 @@ def search(structure):
 
 structure = Structure(input("Folder name: "))
 print(structure.tree())
-
-display = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-clock = pygame.time.Clock()
 
 while True:
 
