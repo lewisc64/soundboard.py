@@ -315,7 +315,7 @@ def search(structure):
             y = box.y + box.height + 10
             display_struct.items = []
             for item in structure.items:
-                if type(item) is FileItem and box.text in item.file.name:
+                if type(item) is FileItem and box.text.lower() in item.file.name.lower():
                     display_struct.items.append(copy.copy(item))
                     display_struct.items[-1].x = x
                     display_struct.items[-1].y = y
@@ -330,8 +330,7 @@ def search(structure):
         pygame.display.update()
         clock.tick(FPS)
 
-#structure = Structure(input("Folder name: "))
-structure = Structure(".")
+structure = Structure(input("Folder name: "))
 print(structure.tree())
 
 display = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
