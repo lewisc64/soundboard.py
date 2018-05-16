@@ -2,8 +2,6 @@ import pygame
 import pyaudio
 import wave
 
-FILE_REGEX = "[^\/.]+\.[^\/.]+"
-
 pygame.mixer.init()
 
 p = pyaudio.PyAudio()
@@ -32,6 +30,7 @@ def play(path):
     try:
         pygame.mixer.music.load(path)
         pygame.mixer.music.play()
+        print("Played file '{}'.".format(path))
     except:
         print("Failed to play file '{}' as sound.".format(path))
         
