@@ -118,7 +118,7 @@ class FileItem(Item):
         player.play(self.file.path)
         
 class Structure:
-    def __init__(self, path=None):
+    def __init__(self, path=None, top_of_screen=0):
         if path is not None:
             self.folder = Folder(path, path)
             self.build(self.folder)
@@ -128,10 +128,11 @@ class Structure:
         self.item_padding = 5
         self.item_indentation = 16
         self.scroll_speed = (self.item_height + self.item_padding) * 4
+        self.x = 5
+        self.y = top_of_screen
+        self.top_of_screen = top_of_screen
         if path is not None:
             self.create_items(self.folder)
-        self.x = 0
-        self.y = 0
 
         #for item in self.items:
         #    if type(item) is FolderItem:
@@ -153,8 +154,9 @@ class Structure:
                 self.build(subfolder)
 
     def create_items(self, folder, position=None):
+        print("create items")
         if position is None:
-            position = [0, 0]
+            position = [self.x, self.y]
         for file in folder.files:
             self.items.append(FileItem(file, position[0], position[1], self.item_width, self.item_height))
             position[1] += self.item_height + self.item_padding
@@ -184,7 +186,7 @@ class Structure:
                             item.onclick(self, x, y)
             
             elif e.button == 4:
-                if self.y < 0:
+                if self.y < -self.top_of_screen:
                     self.move(0, self.scroll_speed)
                     
             elif e.button == 5:
@@ -229,13 +231,16 @@ class File:
     
 
 class Entry:
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, font_size=None):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.color = (0, 0, 0)
-        self.font_size = self.height
+        if font_size is None:
+            self.font_size = self.height
+        else:
+            self.font_size = font_size
         self.font_family = "Consolas"
         self.set_font()
         self.text = ""
@@ -251,7 +256,10 @@ class Entry:
         if self.font is None:
             self.set_font()
         
-        surface.blit(self.font.render(text, 1, self.color), (self.x, self.y))
+        pygame.draw.rect(surface, (200, 200, 200), (self.x, self.y, self.width, self.height))
+        if text != "":
+            text_surface = self.font.render(text, 1, self.color)
+            surface.blit(text_surface, (self.x, self.y + self.height // 2 - text_surface.get_height() // 2))
     
     def set_font(self):
         self.font = pygame.font.SysFont(self.font_family, self.font_size)
@@ -292,52 +300,12 @@ class Entry:
                 
             self.set_blinker()
 
-def search(structure):
-    global display
-    
-    last_string = ""
-    box = Entry(10, 10, WIDTH - 20, 20)
-    display_struct = Structure()
-    
-    while True:
-        
-        for e in pygame.event.get():
-            if e.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            elif e.type == pygame.VIDEORESIZE:
-                display = pygame.display.set_mode((e.w, e.h), pygame.RESIZABLE)
-            elif e.type == pygame.KEYUP:
-                if e.key == pygame.K_ESCAPE:
-                    return
-            box.handle(e)
-            display_struct.handle(e)
-        
-        box.update()
-        
-        if last_string != box.text:
-            last_string = box.text
-            x = 10
-            y = box.y + box.height + 10
-            display_struct.items = []
-            for item in structure.items:
-                if type(item) is FileItem and box.text.lower() in item.file.name.lower():
-                    display_struct.items.append(copy.copy(item))
-                    display_struct.items[-1].x = x
-                    display_struct.items[-1].y = y
-                    display_struct.items[-1].hidden = False
-                    y += item.height + 5
-            
-        
-        display.fill((255, 255, 255))
-        display_struct.draw(display)
-        box.draw(display)
-        
-        pygame.display.update()
-        clock.tick(FPS)
-
-structure = Structure(input("Folder name: "))
+structure = Structure(input("Folder name: "), top_of_screen=35)
 print(structure.tree())
+
+last_string = ""
+box = Entry(0, 0, WIDTH, 30, font_size=20)
+display_struct = Structure(top_of_screen=35)
 
 while True:
 
@@ -347,13 +315,35 @@ while True:
             quit()
         elif e.type == pygame.VIDEORESIZE:
             display = pygame.display.set_mode((e.w, e.h), pygame.RESIZABLE)
-        elif e.type == pygame.KEYUP:
-            if e.key == pygame.K_f:
-                search(structure)
-        structure.handle(e)
+            box.width = e.w
+        box.handle(e)
+        if box.text == "":
+            structure.handle(e)
+        else:
+            display_struct.handle(e)
+            
+    box.update()
+    
+    if box.text != "" and last_string != box.text:
+        last_string = box.text
+        x = 5
+        y = box.y + box.height + 5
+        display_struct.items = []
+        for item in structure.items:
+            if type(item) is FileItem and box.text.lower() in item.file.name.lower():
+                display_struct.items.append(copy.copy(item))
+                display_struct.items[-1].x = x
+                display_struct.items[-1].y = y
+                display_struct.items[-1].hidden = False
+                y += item.height + 5
 
     display.fill((255, 255, 255))
-    structure.draw(display)
+    if box.text == "":
+        structure.draw(display)
+    else:
+        display_struct.draw(display)
+    
+    box.draw(display)
 
     pygame.display.update()
     clock.tick(FPS)
