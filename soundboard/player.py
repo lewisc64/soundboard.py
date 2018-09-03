@@ -1,6 +1,7 @@
 import pygame
 import pyaudio
 import wave
+from threading import Thread
 
 pygame.mixer.init()
 
@@ -27,13 +28,14 @@ def load(path):
     pass
 
 def play(path):
+    
     try:
         pygame.mixer.music.load(path)
         pygame.mixer.music.play()
         print("Played file '{}'.".format(path))
     except:
         print("Failed to play file '{}' as sound.".format(path))
-        
+    
     if USE_PYAUDIO and path.endswith(".wav"):
         sound = wave.open(path, "rb")
         stream = p.open(format=p.get_format_from_width(sound.getsampwidth()),
@@ -48,3 +50,8 @@ def play(path):
         stream.stop_stream()
         stream.close()
         sound.close()
+
+def play_async(path):
+    thread = Thread(target=play, args=(path,))
+    thread.start()
+    return thread

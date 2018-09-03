@@ -115,7 +115,7 @@ class FileItem(Item):
 
     def onclick(self, structure, x, y):
         super().onclick(structure, x, y)
-        player.play(self.file.path)
+        player.play_async(self.file.path)
         
 class Structure:
     def __init__(self, path=None, top_of_screen=0):
