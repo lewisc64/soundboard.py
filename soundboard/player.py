@@ -7,7 +7,8 @@ pygame.mixer.init()
 
 p = pyaudio.PyAudio()
 chunk = 1024
-device = p.get_default_output_device_info()["name"]
+default_device = p.get_default_output_device_info()["index"]
+mirror_device = None
 
 USE_PYAUDIO = input("Use additional device for WAV files? (y/n): ") == "y"
 if USE_PYAUDIO:
@@ -16,32 +17,42 @@ if USE_PYAUDIO:
         try:
             device = p.get_device_info_by_index(x)
             if device["maxOutputChannels"] > 0:
-                print("{} - {}".format(x, device["name"]))
+                print("{} - {}".format(x, device["name"]) + (" <- default" if x == default_device else ""))
         except OSError:
             pass
             
-    device = int(input("\nDevice number: "))
+    mirror_device = int(input("\nDevice number: "))
     
 sounds = {}
 
 def load(path):
     pass
 
-def play(path):
+def play(path, output_device=None):
+
+    if not USE_PYAUDIO or not path.endswith(".wav"):
+        try:
+            pygame.mixer.music.load(path)
+            pygame.mixer.music.play()
+            print("playing file '{}' with pygame.".format(path))
+        except:
+            print("Failed to play file '{}' with pygame.".format(path))
     
-    try:
-        pygame.mixer.music.load(path)
-        pygame.mixer.music.play()
-        print("Played file '{}'.".format(path))
-    except:
-        print("Failed to play file '{}' as sound.".format(path))
-    
-    if USE_PYAUDIO and path.endswith(".wav"):
+    elif USE_PYAUDIO:
+
+        if output_device is None:
+            output_device = default_device
+        
+        print("Playing file '{}' on device {}.".format(path, output_device))
+
+        if output_device != mirror_device:
+            play_async(path, output_device=mirror_device)
+        
         sound = wave.open(path, "rb")
         stream = p.open(format=p.get_format_from_width(sound.getsampwidth()),
                         channels=sound.getnchannels(),
                         rate=sound.getframerate(),
-                        output_device_index=device,
+                        output_device_index=output_device,
                         output=True)
         data = sound.readframes(chunk)
         while len(data) > 0:
@@ -51,7 +62,7 @@ def play(path):
         stream.close()
         sound.close()
 
-def play_async(path):
-    thread = Thread(target=play, args=(path,))
+def play_async(path, output_device=None):
+    thread = Thread(target=play, args=(path,output_device))
     thread.start()
     return thread
