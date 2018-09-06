@@ -24,7 +24,8 @@ class Item:
         self.padding = 2
         self.background_color = (90, 90, 90)
         self.line_color = (180, 180, 180)
-        self.hidden = False        
+        self.hidden = False
+        self.keywords = []
         
     def render_text(self, text):
         self.text = self.font.render(text, True, self.font_color)
@@ -159,6 +160,7 @@ class Structure:
             position = [self.x, self.y]
         for file in folder.files:
             self.items.append(FileItem(file, position[0], position[1], self.item_width, self.item_height))
+            self.items[-1].keywords.append(folder.name)
             position[1] += self.item_height + self.item_padding
         for subfolder in folder.subfolders:
             self.items.append(FolderItem(subfolder, position[0], position[1], self.item_width, self.item_height))
@@ -330,12 +332,18 @@ while True:
         y = box.y + box.height + 5
         display_struct.items = []
         for item in structure.items:
-            if type(item) is FileItem and box.text.lower() in item.file.name.lower():
-                display_struct.items.append(copy.copy(item))
-                display_struct.items[-1].x = x
-                display_struct.items[-1].y = y
-                display_struct.items[-1].hidden = False
-                y += item.height + 5
+            if type(item) is FileItem:
+                match = False
+                for keyword in item.keywords:
+                    if box.text.lower() in keyword.lower():
+                        match = True
+                        break
+                if match:
+                    display_struct.items.append(copy.copy(item))
+                    display_struct.items[-1].x = x
+                    display_struct.items[-1].y = y
+                    display_struct.items[-1].hidden = False
+                    y += item.height + 5
 
     display.fill((255, 255, 255))
     if box.text == "":

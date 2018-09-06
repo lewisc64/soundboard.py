@@ -28,7 +28,7 @@ sounds = {}
 def load(path):
     pass
 
-def play(path, output_device=None):
+def play(path, output_device=None, volume=1):
 
     if not USE_PYAUDIO or not path.endswith(".wav"):
         try:
@@ -62,7 +62,8 @@ def play(path, output_device=None):
         stream.close()
         sound.close()
 
-def play_async(path, output_device=None):
-    thread = Thread(target=play, args=(path,output_device))
+def play_async(path, output_device=None, volume=1):
+    thread = Thread(target=play, args=(path,output_device, volume))
     thread.start()
     return thread
+
