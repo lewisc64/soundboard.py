@@ -28,6 +28,21 @@ sounds = {}
 def load(path):
     pass
 
+queue = []
+
+def add_to_queue(path):
+    global queue
+    queue.append(path)
+
+def play_queue():
+    global queue
+    if len(queue) == 1:
+        play_async(queue[0])
+    else:
+        for path in queue:
+            play(path)
+    queue = []
+
 def play(path, output_device=None, volume=1):
 
     if not USE_PYAUDIO or not path.endswith(".wav"):

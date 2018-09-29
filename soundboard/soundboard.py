@@ -109,14 +109,19 @@ class FileItem(Item):
         self.render_text(str(file))
         self.fit_width_to_text()
         player.load(self.file.path)
+        self.keywords.append(self.file.name)
     
     def draw(self, surface):
         super().draw(surface)
         surface.blit(self.text, (self.x + self.padding, self.y + self.height // 2 - self.text.get_height() // 2))
 
-    def onclick(self, structure, x, y):
+    def onclick(self, structure, x, y, button=0):
         super().onclick(structure, x, y)
-        player.play_async(self.file.path)
+        if e.button == 3:
+            player.add_to_queue(self.file.path)
+        elif e.button == 1:
+            player.add_to_queue(self.file.path)
+            player.play_queue()
         
 class Structure:
     def __init__(self, path=None, top_of_screen=0):
@@ -179,20 +184,20 @@ class Structure:
     def handle(self, e):
 
         if e.type == pygame.MOUSEBUTTONUP:
-
-            if e.button == 1:
-                for item in self.items:
-                    x, y = e.pos
-                    if x >= item.x and y >= item.y and x <= item.x + item.width and y <= item.y + item.height:
-                        if not item.hidden:
-                            item.onclick(self, x, y)
             
-            elif e.button == 4:
+            if e.button == 4:
                 if self.y < -self.top_of_screen:
                     self.move(0, self.scroll_speed)
                     
             elif e.button == 5:
                 self.move(0, -self.scroll_speed)
+
+            else:
+                for item in self.items:
+                    x, y = e.pos
+                    if x >= item.x and y >= item.y and x <= item.x + item.width and y <= item.y + item.height:
+                        if not item.hidden:
+                            item.onclick(self, x, y, e.button)
     
     def draw(self, surface):
         for item in self.items:
